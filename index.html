@@ -154,7 +154,7 @@ let clearedSolo=[];
 try{const saved=JSON.parse(localStorage.getItem('dctt-levels')||'[]');if(Array.isArray(saved))clearedSolo=[...new Set(saved.filter(n=>Number.isInteger(n)&&n>=0&&n<LEVELS.length))]}catch{}
 function nextSoloLevel(){const n=LEVELS.findIndex((_,i)=>!clearedSolo.includes(i));return n<0?0:n}
 function saveSoloClear(){if(!clearedSolo.includes(soloLevel))clearedSolo.push(soloLevel);try{localStorage.setItem('dctt-levels',JSON.stringify(clearedSolo))}catch{}}
-function refreshSoloEntry(){const n=nextSoloLevel(),all=clearedSolo.length===LEVELS.length;$('#solo').innerHTML='<span class="mode-icon" aria-hidden="true">▶</span><span>'+(all?'REPLAY SOLO':n>0?'CONTINUE · LEVEL '+(n+1):'PLAY SOLO')+'<small>'+(all?'All levels complete · Play from Level 1':LEVELS[n].name+' · '+LEVELS.length+' levels')+'</small></span>'}
+function refreshSoloEntry(){const n=nextSoloLevel(),all=clearedSolo.length===LEVELS.length;$('#solo').innerHTML='<span class="mode-icon" aria-hidden="true">▶</span><span>'+(all?'REPLAY SOLO':n>0?'CONTINUE · LV '+(n+1):'PLAY SOLO')+'<small>'+(all?'All levels complete · Play from Level 1':LEVELS[n].name+' · '+LEVELS.length+' levels')+'</small></span>'}
 function updateSupport(){if(!flight&&support){const c=center(support.i);player={x:c.x+support.dx,y:c.y+support.dy}}if(aimTile!==null&&tiles[aimTile]!==null)aim=center(aimTile)}
 function requestLeave(action){if(!mode||completed){action();return}pauseGame();leaveAction=action;$('#confirmTitle').textContent=action===reset?'Restart this round?':'Change mode?';$('#confirmAction').textContent=action===reset?'RESTART':'CHANGE MODE';$('#confirmLeave').showModal()}
 
