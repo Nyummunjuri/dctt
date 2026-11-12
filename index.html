@@ -286,10 +286,13 @@ document.addEventListener('visibilitychange',()=>{if(document.hidden)stopSounds(
 function begin(){if(!mode||pausedAt!==null||performance.now()<countdownEnd||charging!==null||flight||completed)return;unlockAudio();charging=performance.now();document.body.classList.add('charging');startChargeSound()}
 function cancel(){clearBoardGesture();stopChargeSound();charging=null;pointer=null;document.body.classList.remove('charging')}
 function launch(){if(charging===null)return;if(activeLevel()!==null&&isTimed()&&!timerStarted){timerStarted=true;roundStart=performance.now();roundEnd=roundStart+timeLimit()*1000}updateSupport();stopChargeSound();document.body.classList.remove('charging');const end=destination(power(performance.now()));clearBoardGesture();raceAimReady=false;facing=faceToward(player,end,facing);charging=null;reaction=null;flight={from:{...player},to:end,start:performance.now(),duration:620};hops++;hud()}
+function perfectStars(p){const colors=['#ff53ed','#42f5ff','#b26aff','#eeff52','#58ffa6','#ff9557'];for(let i=0;i<16;i++){const angle=i/16*Math.PI*2,speed=.7+Math.random()*1.4;particles.push({star:true,x:p.x,y:p.y,h:6,vx:Math.cos(angle)*speed,vy:Math.sin(angle)*speed,vh:2.2+Math.random()*2.3,life:1,color:colors[i%colors.length],size:4+Math.random()*3,rotation:angle,spin:(Math.random()-.5)*.18})}}
+function advanceParticle(a,dt){a.life-=(a.star?.017:.025)*dt;a.x+=a.vx*dt;a.y+=a.vy*dt;if(a.star){a.h=Math.max(0,a.h+a.vh*dt);a.vh-=.1*dt;a.rotation+=a.spin*dt}else a.vy+=.12*dt}
+function drawNeonStar(a,x,y){ctx.save();ctx.globalAlpha=Math.max(0,a.life);ctx.globalCompositeOperation='lighter';ctx.translate(x,y);ctx.rotate(a.rotation);const radius=a.size*(.65+.35*a.life);ctx.beginPath();for(let i=0;i<10;i++){const angle=-Math.PI/2+i*Math.PI/5,r=i%2?radius*.43:radius;if(i===0)ctx.moveTo(Math.cos(angle)*r,Math.sin(angle)*r);else ctx.lineTo(Math.cos(angle)*r,Math.sin(angle)*r)}ctx.closePath();ctx.shadowColor=a.color;ctx.shadowBlur=12;ctx.fillStyle=a.color;ctx.fill();ctx.shadowBlur=0;ctx.strokeStyle='#ffffff';ctx.lineWidth=.8;ctx.stroke();ctx.restore()}
 function burst(p){for(let i=0;i<20;i++)particles.push({x:p.x,y:p.y,vx:(Math.random()-.5)*5,vy:(Math.random()-.7)*5,life:1})}
 function matchPoints(grade,streak){return 100+({Perfect:25,Great:15,Good:5}[grade]||0)+Math.min(50,Math.max(0,streak-1)*5)}
 function landingGrade(pos,c){const d=Math.hypot(pos.x-c.x,pos.y-c.y)*90/CELL;return d<18?"Perfect":d<32?"Great":"Good"}
-function react(grade,count=true,broken=false){
+function react(grade,count=true,broken=false){if(grade==='Perfect'&&!broken)perfectStars(player);
  if(grade==='Miss'||broken)combo=0;else if(count){combo++;bestCombo=Math.max(bestCombo,combo)}
  soundJudgment(broken?'ComboBreak':grade,count?combo:0);
  reaction={grade,combo,broken,start:performance.now(),duration:grade==='Perfect'?1400:grade==='Miss'?1200:1100};hud();
@@ -323,7 +326,7 @@ function drawJudgment(r,now,x,y){if(!r)return;const age=now-r.start;if(age<0||ag
   const colors={Perfect:['#fff0ff','#ed54ff','#9e24cf'],Great:['#eeffb0','#77ed48','#278a28'],Good:['#e9fcff','#63cfff','#3276ce'],Miss:['#ffe6ef','#ee829e','#a64473']};
   const palette=colors[grade],pop=1+.22*Math.sin(Math.min(1,age/230)*Math.PI);
   x=Math.max(96,Math.min(404,x));y=Math.max(39,Math.min(canvas.height-48,y));
-  ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,fade));ctx.translate(x,y);ctx.scale(pop*.5,pop*.5);ctx.rotate(-.055);
+  ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,fade));ctx.translate(x,y);ctx.scale(pop*.575,pop*.575);ctx.rotate(-.055);
   ctx.font='italic 900 36px HopRounded,"Trebuchet MS",Tahoma,sans-serif';ctx.lineJoin='round';ctx.textAlign='center';ctx.textBaseline='middle';
   const gradient=ctx.createLinearGradient(0,-17,0,17);gradient.addColorStop(0,palette[0]);gradient.addColorStop(.45,palette[1]);gradient.addColorStop(1,palette[2]);
   ctx.strokeStyle='#16303a';ctx.lineWidth=10;ctx.strokeText(grade,0,2);ctx.strokeStyle='#fff9ec';ctx.lineWidth=6;ctx.strokeText(grade,0,0);ctx.strokeStyle=palette[2];ctx.lineWidth=2;ctx.strokeText(grade,0,0);ctx.fillStyle=gradient;ctx.fillText(grade,0,0);
@@ -423,7 +426,7 @@ function botLand(bot,pos){
  }else bot.selected=i;
  hud();checkRound();
 }
-function botReact(bot,grade,count=true,broken=false){if(grade==='Miss'||broken)bot.combo=0;else if(count){bot.combo++;bot.bestCombo=Math.max(bot.bestCombo,bot.combo)}bot.reaction={grade,combo:bot.combo,broken,start:performance.now(),duration:grade==='Perfect'?1400:grade==='Miss'?1200:1100};soundJudgment(broken?'ComboBreak':grade,count?bot.combo:0)}
+function botReact(bot,grade,count=true,broken=false){if(grade==='Perfect'&&!broken)perfectStars(bot.pos);if(grade==='Miss'||broken)bot.combo=0;else if(count){bot.combo++;bot.bestCombo=Math.max(bot.bestCombo,bot.combo)}bot.reaction={grade,combo:bot.combo,broken,start:performance.now(),duration:grade==='Perfect'?1400:grade==='Miss'?1200:1100};soundJudgment(broken?'ComboBreak':grade,count?bot.combo:0)}
 function updateBot(bot,now){
  if(!mode||completed||pausedAt!==null||document.hidden)return;checkRound();if(completed)return;
  if(bot.plan){if(now>=bot.plan.launchAt){bot.flight={from:{...bot.pos},to:bot.plan.to,start:now};bot.plan=null}return}if(bot.flight){const t=Math.min(1,(now-bot.flight.start)/620);if(t>=1){const to=bot.flight.to;bot.flight=null;botLand(bot,to);bot.next=now+(bot.rival?800+Math.random()*400:bot.difficulty==='easy'?1800:650)}return}
@@ -459,7 +462,7 @@ const p=power(now);$('#power').style.width=p*100+'%';$('.meter').setAttribute('a
 if(!flight&&!completed){const target=charging===null?aim:destination(p);ctx.save();ctx.setLineDash([5,7]);ctx.strokeStyle='#ecff96';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(player.x,player.y);ctx.lineTo(target.x,target.y);ctx.stroke();ctx.restore();ctx.strokeStyle=charging===null?'#ffffff88':'#eaff93';ctx.lineWidth=3;ctx.beginPath();ctx.arc(target.x,target.y,charging===null?12:17,0,Math.PI*2);ctx.stroke();if(charging!==null){ctx.fillStyle='#eaff93';ctx.font='bold 13px Tahoma';ctx.fillText(Math.round(p*100)+'%',player.x,player.y-44)}}
 let draw=player,height=0;if(flight){const t=Math.min(1,(now-flight.start)/flight.duration);draw={x:flight.from.x+(flight.to.x-flight.from.x)*t,y:flight.from.y+(flight.to.y-flight.from.y)*t};height=Math.sin(t*Math.PI)*65;if(t===1){const end=flight.to;flight=null;land(end);draw=player;height=0}}
 for(const b of bots)drawBot(b,now);drawCharacter(draw,height,now);if(raccoon.pending){const c=center(raccoon.pending.targets[0]);ctx.font='40px sans-serif';ctx.fillText('🦝',c.x,c.y-42)}
-particles=particles.filter(a=>a.life>0);for(const a of particles){a.life-=.025*dt;a.x+=a.vx*dt;a.y+=a.vy*dt;a.vy+=.12*dt;ctx.globalAlpha=Math.max(0,a.life);ctx.fillStyle='#ecff96';ctx.fillRect(a.x,a.y,5,5)}ctx.globalAlpha=1;requestAnimationFrame(frame)}
+particles=particles.filter(a=>a.life>0);for(const a of particles){advanceParticle(a,dt);if(a.star){drawNeonStar(a,a.x,a.y-a.h);continue}ctx.globalAlpha=Math.max(0,a.life);ctx.fillStyle='#ecff96';ctx.fillRect(a.x,a.y,5,5)}ctx.globalAlpha=1;requestAnimationFrame(frame)}
 
 // Rendering is separate from the 500x500 logical board: rules stay identical in 2D and 3D.
 let view3D=null;
@@ -475,7 +478,7 @@ function frame(now){
  if(!document.hidden&&mode){for(const b of bots)updateBot(b,now);if(mode&&!completed)hud();
  const p=power(now);$('#power').style.width=p*100+'%';$('.meter').setAttribute('aria-valuenow',Math.round(p*100));
  let pos=player,height=0;if(flight){const t=Math.min(1,(now-flight.start)/flight.duration);pos={x:flight.from.x+(flight.to.x-flight.from.x)*t,y:flight.from.y+(flight.to.y-flight.from.y)*t};height=Math.sin(t*Math.PI)*65;if(t===1){const end=flight.to;flight=null;land(end);pos=player;height=0}}
- particles=particles.filter(a=>a.life>0);for(const a of particles){a.life-=.025*dt;a.x+=a.vx*dt;a.y+=a.vy*dt;a.vy+=.12*dt}
+ particles=particles.filter(a=>a.life>0);for(const a of particles){advanceParticle(a,dt)}
  view3D.render(now,pos,height,p);
  }requestAnimationFrame(frame);
 }
@@ -606,7 +609,7 @@ async function init3D(){
  for(let i=0;i<25;i++){const k=tiles[i]??null,c=center(i);tileMeshes[i].visible=i<N*N;tileMeshes[i].position.set(c.x-250,0,c.y-250);tileMeshes[i].scale.set(tileHalf(i)*2,8,tileHalf(i)*2);coverMeshes[i].visible=covers.has(i);coverMeshes[i].scale.set(CELL*.72,48,CELL*.72);coverMeshes[i].position.set(c.x-250,28,c.y-250);rails[i].visible=isMoving(i);rails[i].position.x=baseCenter(i).x-250;rails[i].position.z=baseCenter(i).y-250;if(foodKinds[i]!==k){if(foodGroups[i])scene.remove(foodGroups[i]);foodGroups[i]=k===null?null:foodTemplates[k].clone(true);if(foodGroups[i]){foodGroups[i].userData.tile=i;scene.add(foodGroups[i])}foodKinds[i]=k}const food=foodGroups[i];if(food){food.position.set(c.x-250,22+Math.sin(now*.002+i)*4,c.y-250);food.rotation.y=Math.sin(now*.0006+i)*.35;const occupied=Math.hypot(pos.x-c.x,pos.y-c.y)<40;food.scale.setScalar((occupied?.68:1.25)*Math.min(1.35,CELL/90))}const b=bots.find(b=>b.selected===i);tileMeshes[i].material=material(raccoonMarked(i)?'#ffb631':i===selected?'#ffdc74':b?b.color:k===null?'#363953':['#b36ae7','#ef67b6','#b690f2','#53c4e8','#c978ef','#56d8bb'][k])}
  for(let j=0;j<3;j++){const m=raceRaccoonModels[j],r=raceRaccoons[j];m.visible=isRace()&&!!r;if(m.visible){const p=r.pending,c=p?center(p.targets[Math.min(1,Math.floor((raceElapsed()-p.start)/1000))]):{x:15+j*235,y:35};m.position.set(c.x-250,8+Math.abs(Math.sin(gameNow()/180+j))*5,c.y-250);m.scale.setScalar(.8)}}raccoonModel.visible=!!raccoon.pending&&activeLevel()===3;if(raccoonModel.visible){const p=raccoon.pending,a=center(p.targets[0]),b=center(p.targets[1]),t=Math.min(1,(gameNow()-p.start)/2000),u=Math.min(1,t*2),v=Math.max(0,t*2-1);raccoonModel.position.set((t<.5?-40+(a.x+40)*u:a.x+(b.x-a.x)*v)-250,8+Math.abs(Math.sin(t*28))*6,(t<.5?a.y:a.y+(b.y-a.y)*v)-250);raccoonModel.rotation.y=Math.PI*.1}marker.visible=line.visible=!flight&&!completed;const dest=charging===null?aim:destination(p);marker.position.set(dest.x-250,6,dest.y-250);const arr=line.geometry.attributes.position;arr.setXYZ(0,player.x-250,7,player.y-250);arr.setXYZ(1,dest.x-250,7,dest.y-250);arr.needsUpdate=true;line.computeLineDistances();
  moveActor(actors[0],pos,height,now,reaction,facing);for(let j=0;j<2;j++){const b=bots[j],model=actors[j+1];model.g.visible=!!b;if(b){let bp=b.pos,bh=0;if(b.flight){const t=Math.min(1,(now-b.flight.start)/620);bp={x:b.flight.from.x+(b.flight.to.x-b.flight.from.x)*t,y:b.flight.from.y+(b.flight.to.y-b.flight.from.y)*t};bh=Math.sin(t*Math.PI)*65}moveActor(model,bp,bh,now,b.reaction,b.facing)}}
- for(const a of particles){const p=project(a.x-250,18+(1-a.life)*25,a.y-250);ctx.globalAlpha=Math.max(0,a.life);ctx.fillStyle='#fff0a2';ctx.fillRect(p.x,p.y,4,4)}ctx.globalAlpha=1;renderer.render(scene,camera);
+ for(const a of particles){const p=project(a.x-250,a.star?a.h:18+(1-a.life)*25,a.y-250);if(a.star){drawNeonStar(a,p.x,p.y);continue}ctx.globalAlpha=Math.max(0,a.life);ctx.fillStyle='#fff0a2';ctx.fillRect(p.x,p.y,4,4)}ctx.globalAlpha=1;renderer.render(scene,camera);
  }};
  webgl.addEventListener('webglcontextlost',e=>{e.preventDefault();view3D=null;canvas.classList.remove('overlay3d');webgl.hidden=true;fitBoard();$('#renderState').textContent='Switched to 2D — the 3D view stopped responding.';say('Switched to 2D so you can keep playing. Reload to try 3D again.')});
  fitBoard();$('#renderState').textContent='Ready · 3D district / 4 floating foods';
