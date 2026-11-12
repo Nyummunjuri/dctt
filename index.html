@@ -114,7 +114,7 @@ function drawCharacter(pos,height,now){
  if(r){
   const colors={Perfect:['#fff0ff','#ed54ff','#9e24cf'],Great:['#eeffb0','#77ed48','#278a28'],Good:['#e9fcff','#63cfff','#3276ce'],Miss:['#ffe6ef','#ee829e','#a64473']};
   const palette=colors[grade],pop=1+.22*Math.sin(Math.min(1,age/230)*Math.PI);
-  const x=Math.max(96,Math.min(404,pos.x)),y=Math.max(39,pos.y-height-66-bounce);
+  const x=Math.max(96,Math.min(404,pos.x)),y=Math.max(39,pos.y-height-83-bounce);
   ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,fade));ctx.translate(x,y);ctx.scale(pop,pop);ctx.rotate(-.055);
   ctx.font='italic 900 32px "Trebuchet MS",Tahoma,sans-serif';ctx.lineJoin='round';ctx.textAlign='center';ctx.textBaseline='middle';
   const gradient=ctx.createLinearGradient(0,-17,0,17);gradient.addColorStop(0,palette[0]);gradient.addColorStop(.45,palette[1]);gradient.addColorStop(1,palette[2]);
@@ -125,29 +125,48 @@ function drawCharacter(pos,height,now){
  }
  ctx.save();ctx.translate(pos.x,pos.y-height-bounce-bob-8+(sad?4:0));ctx.rotate(sway);
  if(grade==='Perfect'&&age<500){const squash=Math.cos(age/500*Math.PI*4)*.12;ctx.scale(1+squash,1-squash)}
- ctx.strokeStyle='#fff6df';ctx.lineWidth=4;ctx.lineCap='round';
- // Feet and little arms make the dance readable on a phone.
- ctx.beginPath();ctx.moveTo(-5,13);ctx.lineTo(-8-(dance?Math.sin(t*19)*4:0),20);ctx.moveTo(5,13);ctx.lineTo(8+(dance?Math.sin(t*19)*4:0),20);ctx.stroke();
- const armY=dance?-8+Math.sin(t*19)*7:surprise?-15:sad?14:3;
- ctx.beginPath();ctx.moveTo(-13,2);ctx.lineTo(-23,armY);ctx.moveTo(13,2);ctx.lineTo(23,dance?-armY:armY);ctx.stroke();
- ctx.fillStyle='#fff9df';ctx.strokeStyle='#153b3c';ctx.lineWidth=2.5;ctx.beginPath();ctx.arc(0,-2,17,0,Math.PI*2);ctx.fill();ctx.stroke();
- ctx.fillStyle='#153b3c';ctx.lineWidth=2.5;
- if(grade==='Perfect'){
-  for(const x of [-6,6]){ctx.beginPath();ctx.arc(x,-4,3.5,Math.PI,Math.PI*2);ctx.stroke()}
-  ctx.beginPath();ctx.arc(0,2,7,0,Math.PI);ctx.fill();
- }else if(sad){
-  for(const x of [-6,6]){ctx.beginPath();ctx.moveTo(x-3,-6);ctx.lineTo(x,-4);ctx.lineTo(x+3,-6);ctx.stroke()}
-  ctx.beginPath();ctx.arc(0,10,5,Math.PI,Math.PI*2);ctx.stroke();
-  ctx.fillStyle='#78cfff';ctx.beginPath();ctx.ellipse(11,4+Math.min(age/85,7),2.5,4,0,0,Math.PI*2);ctx.fill();
- }else if(surprise){
-  for(const x of [-6,6]){ctx.beginPath();ctx.ellipse(x,-5,3,4,0,0,Math.PI*2);ctx.fill()}
-  ctx.beginPath();ctx.ellipse(0,5,4,5,0,0,Math.PI*2);ctx.fill();
+ // Layered canvas character based on the supplied red-bun / yellow-jacket reference.
+ // Feet stay near the landing marker; limbs and expressions follow existing reactions.
+ const skin='#ffb579',ink='#633c3b',hair='#f65c68';
+ const oval=(x,y,rx,ry,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill()};
+ ctx.lineCap='round';ctx.lineJoin='round';
+ const step=dance?Math.sin(t*19)*4:0;
+ ctx.strokeStyle=skin;ctx.lineWidth=5;
+ ctx.beginPath();ctx.moveTo(-7,8);ctx.lineTo(-7-step,18);ctx.moveTo(7,8);ctx.lineTo(7+step,18);ctx.stroke();
+ oval(-7-step,19,4,2.6,'#ed995b');oval(7+step,19,4,2.6,'#ed995b');
+ ctx.strokeStyle='#ffdd54';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-10-step,17);ctx.lineTo(-4-step,17);ctx.moveTo(4+step,17);ctx.lineTo(10+step,17);ctx.stroke();
+ roundRect(-13,-4,26,16,6,'#207da4');
+ const armY=dance?-7+Math.sin(t*19)*7:surprise?-14:sad?8:-1;
+ ctx.strokeStyle=skin;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-12,-3);ctx.lineTo(-23,armY);ctx.moveTo(12,-3);ctx.lineTo(23,dance?-armY-6:armY);ctx.stroke();
+ oval(-23,armY,4.5,5,skin);oval(23,dance?-armY-6:armY,4.5,5,skin);
+ roundRect(-12,-12,24,16,4,'#fff0b4');
+ ctx.strokeStyle='#ead67c';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-3,-10);ctx.lineTo(-3,3);ctx.moveTo(3,-10);ctx.lineTo(3,3);ctx.stroke();
+ roundRect(-18,-12,14,19,5,'#f5cd36');roundRect(4,-12,14,19,5,'#f5cd36');
+ oval(-9,-10,5,5,'#ffdc59');oval(9,-10,5,5,'#ffdc59');
+ oval(-12,3,3,3,'#eeb339');oval(12,3,3,3,'#eeb339');
+ // High bun, back hair, ears, and rounded face.
+ oval(0,-42,15,12,'#d94559');oval(0,-44,14,10,hair);
+ ctx.strokeStyle='#e75060';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-7,-50);ctx.quadraticCurveTo(-10,-45,-7,-39);ctx.moveTo(6,-50);ctx.quadraticCurveTo(10,-44,7,-39);ctx.stroke();
+ oval(0,-26,21,18,'#df4858');oval(-20,-20,5,7,skin);oval(20,-20,5,7,skin);
+ oval(-21,-20,2.4,4,'#f38c72');oval(21,-20,2.4,4,'#f38c72');
+ roundRect(-19,-36,38,30,12,skin);
+ oval(-14,-14,4,5,'#f7997f');oval(14,-14,4,5,'#f7997f');
+ ctx.fillStyle=hair;ctx.beginPath();ctx.moveTo(-20,-24);ctx.bezierCurveTo(-22,-42,17,-48,21,-27);ctx.lineTo(17,-23);ctx.lineTo(14,-32);ctx.quadraticCurveTo(5,-29,2,-35);ctx.quadraticCurveTo(0,-40,-3,-32);ctx.quadraticCurveTo(-10,-28,-16,-31);ctx.lineTo(-18,-23);ctx.closePath();ctx.fill();
+ oval(-10,-31,4.5,4,'#e74c5e');oval(10,-31,4.5,4,'#e74c5e');
+ ctx.strokeStyle=ink;ctx.lineWidth=1.7;
+ if(grade==='Perfect'||sad){
+  for(const x of [-8,8]){ctx.beginPath();if(sad){ctx.moveTo(x-4,-23);ctx.quadraticCurveTo(x,-18,x+4,-23)}else{ctx.arc(x,-20,4,Math.PI,Math.PI*2)}ctx.stroke()}
  }else{
-  for(const x of [-6,6]){ctx.beginPath();ctx.arc(x,-5,2.2,0,Math.PI*2);ctx.fill()}
-  if(grade==='Great'){ctx.beginPath();ctx.arc(0,1,6,0,Math.PI);ctx.stroke()}
-  else{ctx.beginPath();ctx.moveTo(-3,5);ctx.lineTo(3,5);ctx.stroke()}
+  for(const x of [-8,8]){oval(x,-22,6.3,surprise?8:7.5,'#fff8d9');ctx.beginPath();ctx.ellipse(x,-22,6.3,surprise?8:7.5,0,0,Math.PI*2);ctx.stroke();oval(x+.5,-23,4.2,5.3,ink);oval(x+1.5,-25,1.1,1.2,'#fff6df')}
  }
- if(grade==='Perfect'||grade==='Great'){ctx.fillStyle='#ffb6a9';for(const x of [-11,11]){ctx.beginPath();ctx.ellipse(x,3,3,2,0,0,Math.PI*2);ctx.fill()}}
+ ctx.strokeStyle=ink;ctx.fillStyle=ink;ctx.lineWidth=1.7;
+ ctx.beginPath();
+ if(sad){ctx.moveTo(-4,-10);ctx.quadraticCurveTo(0,-15,4,-10)}
+ else if(surprise){ctx.ellipse(0,-12,3,3.8,0,0,Math.PI*2);ctx.fill()}
+ else if(grade==='Perfect'){ctx.arc(0,-14,5,0,Math.PI);ctx.fill()}
+ else if(grade==='Great'){ctx.arc(0,-15,4.5,0,Math.PI)}
+ else{ctx.moveTo(-4,-12);ctx.quadraticCurveTo(-2,-10,0,-12);ctx.quadraticCurveTo(2,-10,4,-12)}ctx.stroke();
+ if(sad)oval(14,-15+Math.min(age/130,5),1.8,3,'#7bdcff');
  ctx.restore();
 }
 
