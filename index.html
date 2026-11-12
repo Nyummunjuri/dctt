@@ -225,9 +225,13 @@ function clearSelections(){for(const b of bots)if(b.selected!==null&&tiles[b.sel
 function reset(){levelExtraSeconds=0;cancel();orderQueue=[];orderWarningUntil=0;orderHudKey='';raceAimReady=false;raceMoving.clear();respawnQueue=[];raceVersions=Array(25).fill(0);raceRaccoons=[];raceNewBest=false;closePause();$('#timeUp').close();continueFreeze=null;raccoon={started:false,next:Infinity,pending:null};$('#levelHelp').textContent=activeLevel()===null?'':LEVELS[soloLevel].name+': '+LEVELS[soloLevel].desc;$('#confirmLeave').close();document.body.classList.remove('charging','results');stopSounds();charging=null;flight=null;pointer=null;completed=false;completedAt=null;levelCleared=false;particles=[];reaction=null;combo=0;bestCombo=0;support=null;aimTile=null;openedTile=null;lastWarning=-1;lastCountdownBeat=-1;roundStart=performance.now();motionStart=roundStart;const level=activeLevel();N=LEVELS[level]?.size||5;CELL=450/N;if(level!==null){tiles=[...MAPS[LEVELS[level].map]].map(c=>c==='.'?null:FOOD_CODES[c])}else{const deck=[];for(let i=0;i<12;i++)deck.push(i%4,i%4);for(let i=deck.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]]}tiles=Array.from({length:25},(_,i)=>i===12?null:deck.pop())}orderQueue=level===4?createOrders(tiles):[];covers=new Set(level===1?COVER_TILES:[]);player={x:250,y:250};aimTile=0;aim=center(0);raceAimReady=!!mode;facing=faceToward(player,aim);selected=null;score=0;pairs=0;hops=0;button.disabled=!mode;bots=isRace()?[makeBot('easy',0)]:[];countdownEnd=isRival()?roundStart+3000:0;timerStarted=bots.length>0;roundEnd=timerStarted?(countdownEnd||roundStart)+timeLimit()*1000:Infinity;if(isRival()){player={x:232,y:250};bots[0].pos={x:268,y:250};bots[0].rival=true;bots[0].next=countdownEnd+1000;roundStart=countdownEnd}$('#race').hidden=false;buildScoreHud();$('#result').hidden=true;hud();say(isRace()?'First target ready. Hold anywhere and release to jump, or tap another tile to aim.':level===null?'Tap a tile to aim. Hold and release to pick your first food.':LEVELS[level].desc);playBgm()}
 
 let audioContext=null,audioBus=null,soundEnabled=true;
-const bgm=new Audio('assets/neon-district-lofi-72bpm.wav');bgm.loop=true;bgm.volume=.3;bgm.preload='none';bgm.id='bgm';bgm.hidden=true;document.body.appendChild(bgm);
+const bgm=new Audio('assets/neon-district-lofi-72bpm.wav');bgm.loop=true;bgm.volume=.3;bgm.preload='auto';bgm.id='bgm';bgm.hidden=true;document.body.appendChild(bgm);
 
-function playBgm(){if(soundEnabled&&mode&&pausedAt===null&&!document.hidden)bgm.play().catch(()=>{})}
+function playBgm(){if(soundEnabled&&pausedAt===null&&!document.hidden&&!$('#timeUp').open&&bgm.paused)bgm.play().catch(()=>{})}
+function unlockHomeBgm(){if(mode===null)playBgm()}
+document.addEventListener('pointerdown',unlockHomeBgm,{passive:true});
+document.addEventListener('click',unlockHomeBgm);
+document.addEventListener('keydown',unlockHomeBgm);
 const judgmentBuffers={};let judgmentLoad=null;
 function loadJudgments(){
  if(judgmentLoad||!audioContext)return;
@@ -413,7 +417,7 @@ function drawCharacter(pos,height,now,actor=null){
 }
 
 
-function showMenu(){$('#comingSoon').hidden=true;raceRaccoons=[];respawnQueue=[];closePause();$('#timeUp').close();continueFreeze=null;raccoon.pending=null;$('#confirmLeave').close();document.body.classList.remove('playing','results','race-direct');mode=null;cancel();flight=null;bots=[];reaction=null;stopSounds();button.disabled=true;$('#menu').hidden=false;$('#play').hidden=true;$('#reset').hidden=true;document.body.classList.remove('solo-run');refreshSoloEntry();$('#solo').focus()}
+function showMenu(){$('#comingSoon').hidden=true;raceRaccoons=[];respawnQueue=[];closePause();$('#timeUp').close();continueFreeze=null;raccoon.pending=null;$('#confirmLeave').close();document.body.classList.remove('playing','results','race-direct');mode=null;cancel();flight=null;bots=[];reaction=null;stopSounds();button.disabled=true;$('#menu').hidden=false;$('#play').hidden=true;$('#reset').hidden=true;document.body.classList.remove('solo-run');refreshSoloEntry();$('#solo').focus();playBgm()}
 function startGame(choice,level=0){$('#comingSoon').hidden=true;if(choice==='solo'&&(level<0||level>=LEVELS.length))level=0;if(choice==='solo'&&(level===0||mode!=='solo'))freeContinueUsed=false;soloLevel=choice==='solo'?level:null;$('#difficulty').close();document.body.classList.add('playing');window.scrollTo(0,0);mode=choice;$('#menu').hidden=true;$('#play').hidden=false;$('#reset').hidden=false;reset();unlockAudio();$('#menuButton').blur()}
 let tutorialSeen=false,pendingTutorialAction=null;
 try{tutorialSeen=localStorage.getItem('dctt-tutorial-seen')==='1'}catch{}
