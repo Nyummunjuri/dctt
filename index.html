@@ -36,6 +36,7 @@ body{background:#15182e;color:#f2eaff}h1,body.playing header h1{color:#e4ceff}sm
 <div class="combo-row"><span>COMBO <b id="combo">0</b></span><span>BEST <b id="bestCombo">0</b></span></div><div class="board"><canvas id="game" width="500" height="500" aria-label="สนามไทล์ แตะเพื่อเล็งทิศทางกระโดด"></canvas></div>
 <p id="status" role="status" aria-live="polite"></p><div class="controls"><div class="meter" role="progressbar" aria-label="แรงกระโดด" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="power"></i></div><button id="jump">กดค้างเพื่อชาร์จ<em>ปล่อยนิ้วเพื่อกระโดด</em></button></div>
 <dialog id="help"><h2>วิธีเล่น</h2><p class="hint"><span class="tag">1</span> แตะไทล์เพื่อเล็ง <span class="tag">2</span> กดปุ่มค้างแล้วปล่อย<br>วงสีเหลืองคือจุดตก • ลงภาพเหมือนกันเพื่อจับคู่<br>ลงผิดภาพจะเปลี่ยนเป้าหมาย • ลงกลางแผ่นได้โบนัส<br>Perfect เด้ง + เต้น · Great เต้น · Good ตกใจ · Miss เศร้า<br>จับคู่สำเร็จ COMBO +1 · ผิดคู่หรือ Miss คอมโบเป็น 0<br>เลือกชิ้นแรก / ลงแผ่นเดิม ไม่เพิ่มและไม่เสียคอมโบ<br>เสียงสูงขึ้นตามคอมโบ · เสียงพิเศษทุก 5 คอมโบ<br>BGM: Neon District Lo-fi · ปุ่มเสียงเปิด/ปิดเพลงและเอฟเฟกต์<br>จับคู่สำเร็จ: 100 + Perfect 25 / Great 15 / Good 5<br>โบนัสคอมโบ: +5 ต่อขั้นหลังขั้นแรก สูงสุด +50 ต่อคู่<br>ได้คะแนนเมื่อจับคู่สำเร็จเท่านั้น · คะแนนรวมสูงสุดชนะ<br>คะแนนเสมอเทียบ BEST COMBO · เท่ากันอีกจึงเสมอ</p><button class="reset" id="closeHelp">กลับไปเล่น</button></dialog><footer>DCTT · FLOATING FOOD COURT</footer></div></main>
+<script src="assets/judgments.js"></script>
 <script>
 'use strict';
 const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d');
@@ -60,6 +61,16 @@ function reset(){stopSounds();charging=null;flight=null;pointer=null;completed=f
 let audioContext=null,audioBus=null,soundEnabled=true;
 const bgm=new Audio('assets/neon-district-lofi-72bpm.wav');bgm.loop=true;bgm.volume=.3;bgm.preload='none';bgm.id='bgm';bgm.hidden=true;document.body.appendChild(bgm);
 function playBgm(){if(soundEnabled&&mode&&!document.hidden)bgm.play().catch(()=>{})}
+const judgmentBuffers={};let judgmentLoad=null;
+function loadJudgments(){
+ if(judgmentLoad||!audioContext)return;
+ judgmentLoad=Promise.all(Object.entries(window.DCTT_JUDGMENT_AUDIO||{}).map(async([name,data])=>{try{const bytes=Uint8Array.from(atob(data),c=>c.charCodeAt(0));judgmentBuffers[name]=await audioContext.decodeAudioData(bytes.buffer)}catch{}})).then(()=>{document.body.dataset.sfxReady=String(Object.keys(judgmentBuffers).length)});
+}
+function playJudgmentSample(grade,pitch){
+ if(!soundEnabled||!audioContext||audioContext.state!=='running')return false;
+ const buffer=judgmentBuffers[grade.toLowerCase()];if(!buffer)return false;
+ const voice=audioContext.createBufferSource(),gain=audioContext.createGain();voice.buffer=buffer;voice.playbackRate.value=grade==='Miss'?1:pitch;gain.gain.value=2;voice.connect(gain);gain.connect(audioBus);activeVoices.add(voice);voice.onended=()=>{activeVoices.delete(voice);voice.disconnect();gain.disconnect()};voice.start();document.body.dataset.lastSfx=grade;return true;
+}
 const activeVoices=new Set();
 function stopSounds(){bgm.pause();for(const voice of activeVoices){try{voice.stop()}catch{}}activeVoices.clear()}
 function unlockAudio(){
@@ -69,7 +80,7 @@ function unlockAudio(){
   const AudioContextClass=window.AudioContext||window.webkitAudioContext;
   if(!AudioContextClass)return;
   if(!audioContext){audioContext=new AudioContextClass();audioBus=audioContext.createGain();audioBus.gain.value=.22;audioBus.connect(audioContext.destination)}
-  if(audioContext.state==='suspended')audioContext.resume().catch(()=>{});
+  if(audioContext.state==='suspended')audioContext.resume().catch(()=>{});loadJudgments();
  }catch{ /* Audio is optional; gameplay remains available. */ }
 }
 function tone(frequency,delay,duration,type='sine',volume=.35,endFrequency=frequency){
@@ -83,10 +94,12 @@ function tone(frequency,delay,duration,type='sine',volume=.35,endFrequency=frequ
 }
 function soundJudgment(grade,streak){
  const pitch=2**(Math.min(12,Math.max(0,streak-1))/12);
+ if(!playJudgmentSample(grade,pitch)){
  if(grade==='Perfect'){[523.25,659.25,783.99].forEach((f,i)=>tone(f*pitch,i*.065,.24,'sine',.32));tone(1046.5*pitch,.18,.3,'sine',.18)}
  else if(grade==='Great'){tone(440*pitch,0,.18,'triangle',.3);tone(659.25*pitch,.085,.23,'sine',.3)}
  else if(grade==='Good'){tone(349.23*pitch,0,.18,'triangle',.3)}
  else if(grade==='Miss'){tone(220,0,.22,'triangle',.3,145);tone(145,.16,.28,'sine',.3,85)}
+ }
  if(grade!=='Miss'&&streak>0&&streak%5===0){tone(1046.5*pitch,.29,.17,'sine',.2);tone(1318.5*pitch,.39,.28,'sine',.18)}
 }
 $('#sound').addEventListener('click',()=>{soundEnabled=!soundEnabled;$('#sound').textContent=soundEnabled?'เสียง: เปิด ♫':'เสียง: ปิด';$('#sound').setAttribute('aria-pressed',String(soundEnabled));if(soundEnabled)unlockAudio();else stopSounds()});
