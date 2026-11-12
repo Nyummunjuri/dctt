@@ -36,7 +36,7 @@ body{background:#15182e;color:#f2eaff}h1,body.playing header h1{color:#e4ceff}sm
 <div class="combo-row"><span>COMBO <b id="combo">0</b></span><span>BEST <b id="bestCombo">0</b></span></div><div class="board"><canvas id="game" width="500" height="500" aria-label="Tile board. Tap to aim your jump."></canvas></div>
 <p id="status" role="status" aria-live="polite"></p><div class="controls"><div class="meter" role="progressbar" aria-label="Jump power" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="power"></i></div><button id="jump">Hold to charge<em>Release to jump</em></button></div>
 <dialog id="help"><h2>How to play</h2><p class="hint"><span class="tag">1</span> Tap a tile or food to aim.<br><span class="tag">2</span> Hold the jump button, then release. On desktop, use Space.<br>The yellow ring shows your landing spot. Match two identical foods.<br>A wrong match becomes your new target. Center landings earn bonus points.<br>Perfect: bounce + dance · Great: dance · Good: surprised · Miss: sad<br>Each completed pair adds 1 COMBO. A wrong match or Miss resets it to 0.<br>Picking the first food or landing on the same tile keeps your combo.<br>Sound pitch rises with your combo. Every 5 combos adds a special chime.<br>BGM: Neon District Lo-fi. Sound toggles both music and effects.<br>Each pair: 100 + Perfect 25 / Great 15 / Good 5.<br>Combo bonus: +5 per step after the first, up to +50 per pair.<br>Only completed pairs earn points. Highest total score wins.<br>Tied scores use BEST COMBO. Equal scores and combos are a tie.</p><button class="reset" id="closeHelp">Back to game</button></dialog><footer>DCTT · FLOATING FOOD COURT</footer></div></main>
-<script src="assets/judgments.js"></script>
+<script src="assets/judgments.js?v=2"></script>
 <script>
 'use strict';
 const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d');
@@ -69,7 +69,7 @@ function loadJudgments(){
 function playJudgmentSample(grade,pitch){
  if(!soundEnabled||!audioContext||audioContext.state!=='running')return false;
  const buffer=judgmentBuffers[grade.toLowerCase()];if(!buffer)return false;
- const voice=audioContext.createBufferSource(),gain=audioContext.createGain();voice.buffer=buffer;voice.playbackRate.value=grade==='Miss'?1:pitch;gain.gain.value=2;voice.connect(gain);gain.connect(audioBus);activeVoices.add(voice);voice.onended=()=>{activeVoices.delete(voice);voice.disconnect();gain.disconnect()};voice.start();document.body.dataset.lastSfx=grade;return true;
+ const voice=audioContext.createBufferSource(),gain=audioContext.createGain();voice.buffer=buffer;voice.playbackRate.value=(grade==='Miss'||grade==='ComboBreak')?1:pitch;gain.gain.value=grade==='Miss'?.55:grade==='ComboBreak'?.6:2;voice.connect(gain);gain.connect(audioBus);activeVoices.add(voice);voice.onended=()=>{activeVoices.delete(voice);voice.disconnect();gain.disconnect()};voice.start();document.body.dataset.lastSfx=grade;return true;
 }
 const activeVoices=new Set();
 function stopSounds(){bgm.pause();for(const voice of activeVoices){try{voice.stop()}catch{}}activeVoices.clear()}
@@ -98,9 +98,9 @@ function soundJudgment(grade,streak){
  if(grade==='Perfect'){[523.25,659.25,783.99].forEach((f,i)=>tone(f*pitch,i*.065,.24,'sine',.32));tone(1046.5*pitch,.18,.3,'sine',.18)}
  else if(grade==='Great'){tone(440*pitch,0,.18,'triangle',.3);tone(659.25*pitch,.085,.23,'sine',.3)}
  else if(grade==='Good'){tone(349.23*pitch,0,.18,'triangle',.3)}
- else if(grade==='Miss'){tone(220,0,.22,'triangle',.3,145);tone(145,.16,.28,'sine',.3,85)}
+ else if(grade==='Miss'||grade==='ComboBreak'){tone(220,0,.22,'triangle',.3,145);tone(145,.16,.28,'sine',.3,85)}
  }
- if(grade!=='Miss'&&streak>0&&streak%5===0){tone(1046.5*pitch,.29,.17,'sine',.2);tone(1318.5*pitch,.39,.28,'sine',.18)}
+ if(grade!=='Miss'&&grade!=='ComboBreak'&&streak>0&&streak%5===0){tone(1046.5*pitch,.29,.17,'sine',.2);tone(1318.5*pitch,.39,.28,'sine',.18)}
 }
 $('#sound').addEventListener('click',()=>{soundEnabled=!soundEnabled;$('#sound').textContent=soundEnabled?'Sound: On ♫':'Sound: Off';$('#sound').setAttribute('aria-pressed',String(soundEnabled));if(soundEnabled)unlockAudio();else stopSounds()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden)stopSounds();else playBgm()});
@@ -113,7 +113,7 @@ function matchPoints(grade,streak){return 100+({Perfect:25,Great:15,Good:5}[grad
 function landingGrade(pos,c){const d=Math.hypot(pos.x-c.x,pos.y-c.y);return d<18?"Perfect":d<32?"Great":"Good"}
 function react(grade,count=true,broken=false){
  if(grade==='Miss'||broken)combo=0;else if(count){combo++;bestCombo=Math.max(bestCombo,combo)}
- soundJudgment(broken?'Miss':grade,count?combo:0);
+ soundJudgment(broken?'ComboBreak':grade,count?combo:0);
  reaction={grade,combo,broken,start:performance.now(),duration:grade==='Perfect'?1400:grade==='Miss'?1200:1100};hud();
 }
 function land(pos){reaction=null;const previous={...player};if(pos.x<20||pos.x>480||pos.y<20||pos.y>480){player=previous;react('Miss');say('MISS! Outside the board. Back to your last spot. Use less power.');return}player=pos;const i=tileAt(pos);if(i<0||tiles[i]===null){react('Miss');say(selected===null?'Empty tile. Jump onto a food tile to start a pair.':'Empty tile. Still looking for '+kinds[tiles[selected]].name+'.');return}const grade=landingGrade(pos,center(i));const matched=selected!==null&&i!==selected&&tiles[selected]===tiles[i],broken=selected!==null&&i!==selected&&!matched;react(grade,matched,broken);if(i===selected){say('Same tile! Aim for another tile with the same food.');return}const c=center(i);if(selected!==null&&tiles[selected]===tiles[i]){tiles[selected]=null;tiles[i]=null;selected=null;pairs++;const earned=matchPoints(grade,combo);score+=earned;burst(c);say(grade+'! Match +'+earned+' points. Pick your next pair!');clearSelections();checkRound();}else{const changed=selected!==null;selected=i;say((changed?'Wrong match · COMBO BREAK! New target: ':'Selected: ')+kinds[tiles[i]].name+' — jump to another matching tile.')}hud()}
@@ -220,7 +220,7 @@ function botLand(bot,pos){
  }else bot.selected=i;
  hud();checkRound();
 }
-function botReact(bot,grade,count=true,broken=false){if(grade==='Miss'||broken)bot.combo=0;else if(count){bot.combo++;bot.bestCombo=Math.max(bot.bestCombo,bot.combo)}bot.reaction={grade,combo:bot.combo,broken,start:performance.now(),duration:grade==='Perfect'?1400:grade==='Miss'?1200:1100};soundJudgment(broken?'Miss':grade,count?bot.combo:0)}
+function botReact(bot,grade,count=true,broken=false){if(grade==='Miss'||broken)bot.combo=0;else if(count){bot.combo++;bot.bestCombo=Math.max(bot.bestCombo,bot.combo)}bot.reaction={grade,combo:bot.combo,broken,start:performance.now(),duration:grade==='Perfect'?1400:grade==='Miss'?1200:1100};soundJudgment(broken?'ComboBreak':grade,count?bot.combo:0)}
 function updateBot(bot,now){
  if(!mode||completed||document.hidden)return;checkRound();if(completed)return;
  if(bot.flight){const t=Math.min(1,(now-bot.flight.start)/620);if(t>=1){const to=bot.flight.to;bot.flight=null;botLand(bot,to);bot.next=now+(bot.difficulty==='easy'?1800:650)}return}
