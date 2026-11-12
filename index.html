@@ -319,11 +319,11 @@ window.addEventListener('blur',pauseGame);document.addEventListener('visibilityc
 function roundRect(x,y,w,h,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
 
 // Cosmetic reactions never move the logical landing point or block the next jump.
-function drawJudgment(r,now,x,y){if(!r)return;const age=now-r.start;if(age<0||age>r.duration)return;const grade=r.grade,fade=Math.min(1,(r.duration-age)/180);
+function drawJudgment(r,now,x,y){if(!r)return;const age=now-r.start;if(age<0||age>r.duration)return;const grade=r.grade,fade=Math.min(1,(r.duration-age)/450);y-=16+36*(age/r.duration);
   const colors={Perfect:['#fff0ff','#ed54ff','#9e24cf'],Great:['#eeffb0','#77ed48','#278a28'],Good:['#e9fcff','#63cfff','#3276ce'],Miss:['#ffe6ef','#ee829e','#a64473']};
   const palette=colors[grade],pop=1+.22*Math.sin(Math.min(1,age/230)*Math.PI);
   x=Math.max(96,Math.min(404,x));y=Math.max(39,Math.min(canvas.height-48,y));
-  ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,fade));ctx.translate(x,y);ctx.scale(pop,pop);ctx.rotate(-.055);
+  ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,fade));ctx.translate(x,y);ctx.scale(pop*.5,pop*.5);ctx.rotate(-.055);
   ctx.font='italic 900 36px HopRounded,"Trebuchet MS",Tahoma,sans-serif';ctx.lineJoin='round';ctx.textAlign='center';ctx.textBaseline='middle';
   const gradient=ctx.createLinearGradient(0,-17,0,17);gradient.addColorStop(0,palette[0]);gradient.addColorStop(.45,palette[1]);gradient.addColorStop(1,palette[2]);
   ctx.strokeStyle='#16303a';ctx.lineWidth=10;ctx.strokeText(grade,0,2);ctx.strokeStyle='#fff9ec';ctx.lineWidth=6;ctx.strokeText(grade,0,0);ctx.strokeStyle=palette[2];ctx.lineWidth=2;ctx.strokeText(grade,0,0);ctx.fillStyle=gradient;ctx.fillText(grade,0,0);
