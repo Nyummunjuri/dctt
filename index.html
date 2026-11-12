@@ -7,8 +7,8 @@
 <body><main><header><div><small>POCKET PLAYGROUND / 01</small><h1>Dancing Tap Tile<span style="color:#ffbc99">.</span></h1></div><button class="reset" id="reset" aria-label="เริ่มเกมใหม่">เริ่มใหม่ ↻</button></header>
 <div class="stats"><div><span>คะแนน</span><strong id="score">0</strong></div><div><span>คู่</span><strong id="pairs">0/12</strong></div><div><span>กระโดด</span><strong id="hops">0</strong></div></div>
 <div style="display:flex;justify-content:space-between;margin:0 6px 9px;font-size:12px;color:#cce4d3"><span>COMBO <b id="combo">0</b></span><span>BEST <b id="bestCombo">0</b></span></div><div class="board"><canvas id="game" width="500" height="500" aria-label="สนามไทล์ แตะเพื่อเล็งทิศทางกระโดด"></canvas></div>
-<p id="status" role="status" aria-live="polite"></p><div class="controls"><div class="meter" role="progressbar" aria-label="แรงกระโดด" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="power"></i></div><button id="jump">กดค้างเพื่อชาร์จ<em>ปล่อยนิ้วเพื่อกระโดด</em></button></div>
-<p class="hint"><span class="tag">1</span> แตะไทล์เพื่อเล็ง <span class="tag">2</span> กดปุ่มค้างแล้วปล่อย<br>วงสีเหลืองคือจุดตก • ลงภาพเหมือนกันเพื่อจับคู่<br>ลงผิดภาพจะเปลี่ยนเป้าหมาย • ลงกลางแผ่นได้โบนัส<br>Perfect เด้ง + เต้น · Great เต้น · Good ตกใจ · Miss เศร้า<br>ลงไทล์สิ่งของต่อเนื่องเพื่อทำ COMBO · Miss รีเซ็ตคอมโบ</p><footer>CONCEPT PROTOTYPE · SOLO · 2D JUMP SIMULATION</footer></main>
+<p id="status" role="status" aria-live="polite"></p><div class="controls"><button class="reset" id="sound" aria-pressed="true" style="display:block;margin:0 0 12px auto;font-size:12px">เสียง: เปิด ♫</button><div class="meter" role="progressbar" aria-label="แรงกระโดด" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="power"></i></div><button id="jump">กดค้างเพื่อชาร์จ<em>ปล่อยนิ้วเพื่อกระโดด</em></button></div>
+<p class="hint"><span class="tag">1</span> แตะไทล์เพื่อเล็ง <span class="tag">2</span> กดปุ่มค้างแล้วปล่อย<br>วงสีเหลืองคือจุดตก • ลงภาพเหมือนกันเพื่อจับคู่<br>ลงผิดภาพจะเปลี่ยนเป้าหมาย • ลงกลางแผ่นได้โบนัส<br>Perfect เด้ง + เต้น · Great เต้น · Good ตกใจ · Miss เศร้า<br>ลงไทล์สิ่งของต่อเนื่องเพื่อทำ COMBO · Miss รีเซ็ตคอมโบ<br>เสียงสูงขึ้นตามคอมโบ · เสียงพิเศษทุก 5 คอมโบ</p><footer>CONCEPT PROTOTYPE · SOLO · 2D JUMP SIMULATION</footer></main>
 <script>
 'use strict';
 const canvas=document.querySelector('#game'),ctx=canvas.getContext('2d');
@@ -23,14 +23,49 @@ function power(now){return charging===null?0:Math.min(1,Math.max(0,(now-charging
 function destination(p){const d=direction(),r=MIN+(MAX-MIN)*p;return {x:player.x+d.x*r,y:player.y+d.y*r}}
 function say(t){$('#status').textContent=t}
 function hud(){$('#score').textContent=score;$('#pairs').textContent=pairs+'/12';$('#hops').textContent=hops;$('#combo').textContent=combo;$('#bestCombo').textContent=bestCombo}
-function reset(){charging=null;flight=null;pointer=null;completed=false;particles=[];reaction=null;combo=0;bestCombo=0;const deck=[];for(let i=0;i<12;i++)deck.push(i%4,i%4);for(let i=deck.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]]}tiles=Array.from({length:25},(_,i)=>i===12?null:deck.pop());player=center(12);aim=center(7);selected=null;score=0;pairs=0;hops=0;button.disabled=false;hud();say('แตะไทล์ที่อยากไป แล้วกดปุ่มค้างเพื่อกระโดดเลือกชิ้นแรก')}
-function begin(){if(charging!==null||flight||completed)return;charging=performance.now()}
+function reset(){stopSounds();charging=null;flight=null;pointer=null;completed=false;particles=[];reaction=null;combo=0;bestCombo=0;const deck=[];for(let i=0;i<12;i++)deck.push(i%4,i%4);for(let i=deck.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]]}tiles=Array.from({length:25},(_,i)=>i===12?null:deck.pop());player=center(12);aim=center(7);selected=null;score=0;pairs=0;hops=0;button.disabled=false;hud();say('แตะไทล์ที่อยากไป แล้วกดปุ่มค้างเพื่อกระโดดเลือกชิ้นแรก')}
+
+// Original synthesized effects: no downloaded audio, autoplay or network dependency.
+let audioContext=null,audioBus=null,soundEnabled=true;
+const activeVoices=new Set();
+function stopSounds(){for(const voice of activeVoices){try{voice.stop()}catch{}}activeVoices.clear()}
+function unlockAudio(){
+ if(!soundEnabled)return;
+ try{
+  const AudioContextClass=window.AudioContext||window.webkitAudioContext;
+  if(!AudioContextClass)return;
+  if(!audioContext){audioContext=new AudioContextClass();audioBus=audioContext.createGain();audioBus.gain.value=.22;audioBus.connect(audioContext.destination)}
+  if(audioContext.state==='suspended')audioContext.resume().catch(()=>{});
+ }catch{ /* Audio is optional; gameplay remains available. */ }
+}
+function tone(frequency,delay,duration,type='sine',volume=.35,endFrequency=frequency){
+ if(!soundEnabled||!audioContext||audioContext.state!=='running')return;
+ try{
+  const start=audioContext.currentTime+delay,osc=audioContext.createOscillator(),gain=audioContext.createGain();
+  osc.type=type;osc.frequency.setValueAtTime(frequency,start);osc.frequency.exponentialRampToValueAtTime(Math.max(20,endFrequency),start+duration);
+  gain.gain.setValueAtTime(0,start);gain.gain.linearRampToValueAtTime(volume,start+.012);gain.gain.exponentialRampToValueAtTime(.001,start+duration);
+  osc.connect(gain);gain.connect(audioBus);activeVoices.add(osc);osc.onended=()=>{activeVoices.delete(osc);osc.disconnect();gain.disconnect()};osc.start(start);osc.stop(start+duration+.025);
+ }catch{ /* A suspended or unavailable device must not interrupt a jump. */ }
+}
+function soundJudgment(grade,streak){
+ const pitch=2**(Math.min(12,Math.max(0,streak-1))/12);
+ if(grade==='Perfect'){[523.25,659.25,783.99].forEach((f,i)=>tone(f*pitch,i*.065,.24,'sine',.32));tone(1046.5*pitch,.18,.3,'sine',.18)}
+ else if(grade==='Great'){tone(440*pitch,0,.18,'triangle',.3);tone(659.25*pitch,.085,.23,'sine',.3)}
+ else if(grade==='Good'){tone(349.23*pitch,0,.18,'triangle',.3)}
+ else if(grade==='Miss'){tone(220,0,.22,'triangle',.3,145);tone(145,.16,.28,'sine',.3,85)}
+ if(grade!=='Miss'&&streak>0&&streak%5===0){tone(1046.5*pitch,.29,.17,'sine',.2);tone(1318.5*pitch,.39,.28,'sine',.18)}
+}
+$('#sound').addEventListener('click',()=>{soundEnabled=!soundEnabled;$('#sound').textContent=soundEnabled?'เสียง: เปิด ♫':'เสียง: ปิด';$('#sound').setAttribute('aria-pressed',String(soundEnabled));if(soundEnabled)unlockAudio();else stopSounds()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)stopSounds()});
+
+function begin(){if(charging!==null||flight||completed)return;unlockAudio();tone(260,0,.09,'sine',.15);charging=performance.now()}
 function cancel(){charging=null;pointer=null}
 function launch(){if(charging===null)return;const end=destination(power(performance.now()));charging=null;reaction=null;flight={from:{...player},to:end,start:performance.now(),duration:620};hops++;hud()}
 function burst(p){for(let i=0;i<20;i++)particles.push({x:p.x,y:p.y,vx:(Math.random()-.5)*5,vy:(Math.random()-.7)*5,life:1})}
 function landingGrade(pos,c){const d=Math.hypot(pos.x-c.x,pos.y-c.y);return d<18?"Perfect":d<32?"Great":"Good"}
 function react(grade,count=true){
  if(grade==='Miss')combo=0;else if(count){combo++;bestCombo=Math.max(bestCombo,combo)}
+ soundJudgment(grade,count?combo:0);
  reaction={grade,combo,start:performance.now(),duration:grade==='Perfect'?1400:grade==='Miss'?1200:1100};hud();
 }
 function land(pos){reaction=null;const previous={...player};if(pos.x<20||pos.x>480||pos.y<20||pos.y>480){player=previous;react('Miss');say('MISS! ไกลเกินสนาม! กลับจุดเดิม ลองชาร์จให้น้อยลง');return}player=pos;const i=tileAt(pos);if(i<0||tiles[i]===null){react('Miss');say(selected===null?'พื้นว่าง — กระโดดไปเลือกสิ่งของได้เลย':'พื้นว่าง — ยังตามหา '+kinds[tiles[selected]].name+' อยู่');return}const grade=landingGrade(pos,center(i));react(grade,i!==selected);if(i===selected){say('แผ่นเดิม! เล็งไปอีกแผ่นที่มีภาพเหมือนกัน');return}const c=center(i),perfect=grade==='Perfect';if(selected!==null&&tiles[selected]===tiles[i]){tiles[selected]=null;tiles[i]=null;selected=null;pairs++;score+=100+(perfect?25:0);burst(c);say(perfect?'PERFECT! +125 · เลือกคู่ถัดไปได้เลย':'จับคู่สำเร็จ! +100 · เลือกคู่ถัดไปได้เลย');if(pairs===12){completed=true;button.disabled=true;say('เคลียร์สนามแล้ว! '+score+' คะแนน · '+hops+' กระโดด กดเริ่มใหม่เพื่อลองอีกครั้ง')}}else{const changed=selected!==null;selected=i;say((changed?'เปลี่ยนเป้าหมายเป็น ':'เลือกแล้ว: ')+kinds[tiles[i]].name+' — กระโดดหาอีกแผ่นที่เหมือนกัน')}hud()}
