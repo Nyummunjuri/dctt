@@ -27,7 +27,7 @@ dialog{max-width:min(420px,90vw);max-height:85dvh;overflow:auto;background:#193a
 @media(orientation:landscape) and (max-height:550px){body.playing main{max-width:900px}#play{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.8fr);grid-template-rows:auto auto auto auto minmax(0,1fr) auto;gap:5px 14px}#play .board{grid-column:1;grid-row:1/7}#play .play-tools,#play .race,#play .stats,#play .combo-row,#play #status,#play .controls{grid-column:2}#play #status{min-height:26px}#play .controls{align-self:end}#play #jump{height:50px;min-height:50px}#play #result{top:30%;width:44%;left:3%}}
 </style></head>
 <body><main><header><div><small>POCKET PLAYGROUND / 01</small><h1>Dancing Tap Tile<span style="color:#ffbc99">.</span></h1></div><button class="reset" id="reset" aria-label="เริ่มเกมใหม่">เริ่มใหม่ ↻</button></header>
-<section id="menu" class="menu"><small>CHOOSE YOUR PLAYGROUND</small><h2>วันนี้เล่นแบบไหนดี?</h2><button id="solo" class="mode">Solo<small>ฝึกกะระยะ เก็บครบ 12 คู่ และทำคะแนนของตัวเอง</small></button><button id="multi" class="mode">Multiplayer<small>ทดลองสนามร่วมกับบอท 1 ตัว · ยังไม่ใช่ออนไลน์</small></button><div id="difficulty" hidden><p>เลือกคู่แข่ง · แย่งจับคู่บนสนามเดียวกัน</p><button id="easy" class="mode easy">● Easy — สีฟ้า<small>คิดช้ากว่า กระโดดพลาดได้ เหมาะกับลองแข่ง</small></button><button id="hard" class="mode hard">● Hard — สีแดง<small>หาเส้นทางไว เล็งแม่น และเลือกคู่ใกล้ก่อน</small></button></div></section><div id="play" hidden><div class="play-tools"><button id="menuButton" class="reset">← โหมด</button><button class="reset" id="sound" aria-pressed="true">เสียง: เปิด ♫</button><button class="reset" id="helpButton">วิธีเล่น ?</button></div><div id="race" class="race" hidden></div><div id="result" role="status" hidden></div><div class="stats"><div><span>คะแนน</span><strong id="score">0</strong></div><div><span>คู่</span><strong id="pairs">0/12</strong></div><div><span>กระโดด</span><strong id="hops">0</strong></div></div>
+<section id="menu" class="menu"><small>CHOOSE YOUR PLAYGROUND</small><h2>วันนี้เล่นแบบไหนดี?</h2><button id="solo" class="mode">Solo<small>ฝึกกะระยะ เก็บครบ 12 คู่ และทำคะแนนของตัวเอง</small></button><button id="multi" class="mode">Multiplayer<small>เลือกแข่ง 2 หรือ 3 คนรวมคุณ · บอททดลอง ยังไม่ใช่ออนไลน์</small></button><div id="difficulty" hidden><p>เลือกจำนวนผู้เล่น · แย่งจับคู่บนสนามเดียวกัน</p><button id="easy" class="mode easy">2 คน · คุณ + Easy<small>บอทเสื้อน้ำเงิน กางเกงเหลือง · เหมาะกับลองแข่ง</small></button><button id="hard" class="mode hard">3 คน · คุณ + Easy + Hard<small>เพิ่มบอทฮู้ดแดง · คิดไว เล็งแม่น</small></button></div></section><div id="play" hidden><div class="play-tools"><button id="menuButton" class="reset">← โหมด</button><button class="reset" id="sound" aria-pressed="true">เสียง: เปิด ♫</button><button class="reset" id="helpButton">วิธีเล่น ?</button></div><div id="race" class="race" hidden></div><div id="result" role="status" hidden></div><div class="stats"><div><span>คะแนน</span><strong id="score">0</strong></div><div><span>คู่</span><strong id="pairs">0/12</strong></div><div><span>กระโดด</span><strong id="hops">0</strong></div></div>
 <div class="combo-row"><span>COMBO <b id="combo">0</b></span><span>BEST <b id="bestCombo">0</b></span></div><div class="board"><canvas id="game" width="500" height="500" aria-label="สนามไทล์ แตะเพื่อเล็งทิศทางกระโดด"></canvas></div>
 <p id="status" role="status" aria-live="polite"></p><div class="controls"><div class="meter" role="progressbar" aria-label="แรงกระโดด" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><i id="power"></i></div><button id="jump">กดค้างเพื่อชาร์จ<em>ปล่อยนิ้วเพื่อกระโดด</em></button></div>
 <dialog id="help"><h2>วิธีเล่น</h2><p class="hint"><span class="tag">1</span> แตะไทล์เพื่อเล็ง <span class="tag">2</span> กดปุ่มค้างแล้วปล่อย<br>วงสีเหลืองคือจุดตก • ลงภาพเหมือนกันเพื่อจับคู่<br>ลงผิดภาพจะเปลี่ยนเป้าหมาย • ลงกลางแผ่นได้โบนัส<br>Perfect เด้ง + เต้น · Great เต้น · Good ตกใจ · Miss เศร้า<br>ลงไทล์สิ่งของต่อเนื่องเพื่อทำ COMBO · Miss รีเซ็ตคอมโบ<br>เสียงสูงขึ้นตามคอมโบ · เสียงพิเศษทุก 5 คอมโบ</p><button class="reset" id="closeHelp">กลับไปเล่น</button></dialog><footer>CONCEPT PROTOTYPE · SOLO · 2D JUMP SIMULATION</footer></div></main>
@@ -38,15 +38,17 @@ const $=s=>document.querySelector(s), button=$('#jump');
 const N=5,CELL=90,OFFSET=25,CHARGE=1200,MIN=24,MAX=570;
 const kinds=[{icon:'🍒',name:'เชอร์รี',color:'#ffb6a9'},{icon:'🍋',name:'เลมอน',color:'#f5e49b'},{icon:'🍇',name:'องุ่น',color:'#d9bce6'},{icon:'🥝',name:'กีวี',color:'#c4df9b'}];
 let tiles,player,aim,selected,score,pairs,hops,charging=null,flight=null,pointer=null,completed=false,particles=[],reaction=null,combo=0,bestCombo=0;
-let mode=null,bot=null,roundEnd=0;
+let mode=null,bots=[],roundEnd=0;
 const center=i=>({x:OFFSET+(i%N+.5)*CELL,y:OFFSET+(Math.floor(i/N)+.5)*CELL});
 function tileAt(p){const col=Math.floor((p.x-OFFSET)/CELL),row=Math.floor((p.y-OFFSET)/CELL);if(col<0||col>=N||row<0||row>=N)return -1;const i=row*N+col,c=center(i);return Math.abs(c.x-p.x)<=39&&Math.abs(c.y-p.y)<=39?i:-1}
 function direction(){let dx=aim.x-player.x,dy=aim.y-player.y,d=Math.hypot(dx,dy);return d<1?{x:0,y:-1}:{x:dx/d,y:dy/d}}
 function power(now){return charging===null?0:Math.min(1,Math.max(0,(now-charging)/CHARGE))}
 function destination(p){const d=direction(),r=MIN+(MAX-MIN)*p;return {x:player.x+d.x*r,y:player.y+d.y*r}}
 function say(t){$('#status').textContent=t}
-function hud(){$('#score').textContent=score;$('#pairs').textContent=pairs+'/12';$('#hops').textContent=hops;$('#combo').textContent=combo;$('#bestCombo').textContent=bestCombo;if(bot)$('#race').textContent='คุณ '+pairs+' คู่ · '+score+' คะแนน | '+(mode==='easy'?'🔵 Easy':'🔴 Hard')+' '+bot.pairs+' คู่ · '+bot.score+' คะแนน | '+Math.max(0,Math.ceil((roundEnd-performance.now())/1000))+' วินาที'}
-function reset(){stopSounds();charging=null;flight=null;pointer=null;completed=false;particles=[];reaction=null;combo=0;bestCombo=0;const deck=[];for(let i=0;i<12;i++)deck.push(i%4,i%4);for(let i=deck.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]]}tiles=Array.from({length:25},(_,i)=>i===12?null:deck.pop());player=center(12);aim=center(7);selected=null;score=0;pairs=0;hops=0;button.disabled=!mode;bot=mode&&mode!=='solo'?{pos:center(12),selected:null,pairs:0,score:0,flight:null,next:performance.now()+3000,color:mode==='easy'?'#65ceff':'#ff6975'}:null;roundEnd=performance.now()+90000;$('#race').hidden=!bot;$('#result').hidden=true;hud();say('แตะไทล์ที่อยากไป แล้วกดปุ่มค้างเพื่อกระโดดเลือกชิ้นแรก')}
+function hud(){$('#score').textContent=score;$('#pairs').textContent=pairs+'/12';$('#hops').textContent=hops;$('#combo').textContent=combo;$('#bestCombo').textContent=bestCombo;if(bots.length)$('#race').textContent=['คุณ '+pairs+' คู่',...bots.map(b=>(b.difficulty==='easy'?'🔵 Easy':'🔴 Hard')+' '+b.pairs+' คู่ · x'+b.combo),Math.max(0,Math.ceil((roundEnd-performance.now())/1000))+' วินาที'].join(' | ')}
+function makeBot(difficulty,index){return {difficulty,pos:{x:250+(index===0?-28:28),y:250},selected:null,pairs:0,score:0,combo:0,bestCombo:0,reaction:null,flight:null,next:performance.now()+3000+index*400,color:difficulty==='easy'?'#65ceff':'#ff6975'}}
+function clearSelections(){for(const b of bots)if(b.selected!==null&&tiles[b.selected]===null)b.selected=null;if(selected!==null&&tiles[selected]===null){selected=null;say('บอทเก็บไทล์ที่เลือกไปแล้ว — เลือกชิ้นใหม่ได้เลย')}}
+function reset(){stopSounds();charging=null;flight=null;pointer=null;completed=false;particles=[];reaction=null;combo=0;bestCombo=0;const deck=[];for(let i=0;i<12;i++)deck.push(i%4,i%4);for(let i=deck.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[deck[i],deck[j]]=[deck[j],deck[i]]}tiles=Array.from({length:25},(_,i)=>i===12?null:deck.pop());player=center(12);aim=center(7);selected=null;score=0;pairs=0;hops=0;button.disabled=!mode;bots=mode==='duo'?[makeBot('easy',0)]:mode==='trio'?[makeBot('easy',0),makeBot('hard',1)]:[];roundEnd=performance.now()+90000;$('#race').hidden=!bots.length;$('#result').hidden=true;hud();say('แตะไทล์ที่อยากไป แล้วกดปุ่มค้างเพื่อกระโดดเลือกชิ้นแรก')}
 
 // Original synthesized effects: no downloaded audio, autoplay or network dependency.
 let audioContext=null,audioBus=null,soundEnabled=true;
@@ -91,7 +93,7 @@ function react(grade,count=true){
  soundJudgment(grade,count?combo:0);
  reaction={grade,combo,start:performance.now(),duration:grade==='Perfect'?1400:grade==='Miss'?1200:1100};hud();
 }
-function land(pos){reaction=null;const previous={...player};if(pos.x<20||pos.x>480||pos.y<20||pos.y>480){player=previous;react('Miss');say('MISS! ไกลเกินสนาม! กลับจุดเดิม ลองชาร์จให้น้อยลง');return}player=pos;const i=tileAt(pos);if(i<0||tiles[i]===null){react('Miss');say(selected===null?'พื้นว่าง — กระโดดไปเลือกสิ่งของได้เลย':'พื้นว่าง — ยังตามหา '+kinds[tiles[selected]].name+' อยู่');return}const grade=landingGrade(pos,center(i));react(grade,i!==selected);if(i===selected){say('แผ่นเดิม! เล็งไปอีกแผ่นที่มีภาพเหมือนกัน');return}const c=center(i),perfect=grade==='Perfect';if(selected!==null&&tiles[selected]===tiles[i]){tiles[selected]=null;tiles[i]=null;selected=null;pairs++;score+=100+(perfect?25:0);burst(c);say(perfect?'PERFECT! +125 · เลือกคู่ถัดไปได้เลย':'จับคู่สำเร็จ! +100 · เลือกคู่ถัดไปได้เลย');if(bot&&bot.selected!==null&&tiles[bot.selected]===null)bot.selected=null;checkRound();}else{const changed=selected!==null;selected=i;say((changed?'เปลี่ยนเป้าหมายเป็น ':'เลือกแล้ว: ')+kinds[tiles[i]].name+' — กระโดดหาอีกแผ่นที่เหมือนกัน')}hud()}
+function land(pos){reaction=null;const previous={...player};if(pos.x<20||pos.x>480||pos.y<20||pos.y>480){player=previous;react('Miss');say('MISS! ไกลเกินสนาม! กลับจุดเดิม ลองชาร์จให้น้อยลง');return}player=pos;const i=tileAt(pos);if(i<0||tiles[i]===null){react('Miss');say(selected===null?'พื้นว่าง — กระโดดไปเลือกสิ่งของได้เลย':'พื้นว่าง — ยังตามหา '+kinds[tiles[selected]].name+' อยู่');return}const grade=landingGrade(pos,center(i));react(grade,i!==selected);if(i===selected){say('แผ่นเดิม! เล็งไปอีกแผ่นที่มีภาพเหมือนกัน');return}const c=center(i),perfect=grade==='Perfect';if(selected!==null&&tiles[selected]===tiles[i]){tiles[selected]=null;tiles[i]=null;selected=null;pairs++;score+=100+(perfect?25:0);burst(c);say(perfect?'PERFECT! +125 · เลือกคู่ถัดไปได้เลย':'จับคู่สำเร็จ! +100 · เลือกคู่ถัดไปได้เลย');clearSelections();checkRound();}else{const changed=selected!==null;selected=i;say((changed?'เปลี่ยนเป้าหมายเป็น ':'เลือกแล้ว: ')+kinds[tiles[i]].name+' — กระโดดหาอีกแผ่นที่เหมือนกัน')}hud()}
 canvas.addEventListener('pointerdown',e=>{if(!mode||flight||completed)return;const r=canvas.getBoundingClientRect();aim={x:(e.clientX-r.left)*500/r.width,y:(e.clientY-r.top)*500/r.height};e.preventDefault()});
 button.addEventListener('pointerdown',e=>{if(e.button!==0||pointer!==null)return;e.preventDefault();pointer=e.pointerId;button.setPointerCapture(pointer);begin()});
 button.addEventListener('pointerup',e=>{if(e.pointerId!==pointer)return;pointer=null;launch()});
@@ -101,9 +103,9 @@ window.addEventListener('blur',cancel);document.addEventListener('visibilitychan
 function roundRect(x,y,w,h,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
 
 // Cosmetic reactions never move the logical landing point or block the next jump.
-function drawCharacter(pos,height,now){
- let r=reaction,age=r?now-r.start:0;
- if(r&&age>r.duration){reaction=null;r=null}
+function drawCharacter(pos,height,now,actor=null){
+ let r=actor?actor.reaction:reaction,age=r?now-r.start:0;
+ if(r&&age>r.duration){if(actor)actor.reaction=null;else reaction=null;r=null}
  const grade=r?r.grade:null,t=age/1000,fade=r?Math.min(1,(r.duration-age)/180):0;
  const bounce=grade==='Perfect'&&age<500?Math.abs(Math.sin(age/500*Math.PI*2))*(1-age/650)*22:0;
  const dance=(grade==='Great'||(grade==='Perfect'&&age>=500));
@@ -127,32 +129,32 @@ function drawCharacter(pos,height,now){
  if(grade==='Perfect'&&age<500){const squash=Math.cos(age/500*Math.PI*4)*.12;ctx.scale(1+squash,1-squash)}
  // Layered canvas character based on the supplied red-bun / yellow-jacket reference.
  // Feet stay near the landing marker; limbs and expressions follow existing reactions.
- const skin='#ffb579',ink='#633c3b',hair='#f65c68';
+ const skin='#ffb579',ink='#633c3b',hair=actor?'#82442c':'#f65c68',shirt=actor?(actor.difficulty==='easy'?'#287ed5':'#f44749'):'#f5cd36',shoe=actor?(actor.difficulty==='easy'?'#202a34':'#ed4545'):'#ed995b';
  const oval=(x,y,rx,ry,color)=>{ctx.fillStyle=color;ctx.beginPath();ctx.ellipse(x,y,rx,ry,0,0,Math.PI*2);ctx.fill()};
  ctx.lineCap='round';ctx.lineJoin='round';
  const step=dance?Math.sin(t*19)*4:0;
  ctx.strokeStyle=skin;ctx.lineWidth=5;
  ctx.beginPath();ctx.moveTo(-7,8);ctx.lineTo(-7-step,18);ctx.moveTo(7,8);ctx.lineTo(7+step,18);ctx.stroke();
- oval(-7-step,19,4,2.6,'#ed995b');oval(7+step,19,4,2.6,'#ed995b');
- ctx.strokeStyle='#ffdd54';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-10-step,17);ctx.lineTo(-4-step,17);ctx.moveTo(4+step,17);ctx.lineTo(10+step,17);ctx.stroke();
- roundRect(-13,-4,26,16,6,'#207da4');
+ oval(-7-step,19,4,2.6,shoe);oval(7+step,19,4,2.6,shoe);
+ ctx.strokeStyle=actor?(actor.difficulty==='easy'?'#202a34':'#fff3d9'):'#ffdd54';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-10-step,17);ctx.lineTo(-4-step,17);ctx.moveTo(4+step,17);ctx.lineTo(10+step,17);ctx.stroke();
+ if(actor){roundRect(-13,-4,12,16,3,actor.difficulty==='easy'?'#ffdc4c':'#207da4');roundRect(1,-4,12,16,3,actor.difficulty==='easy'?'#ffdc4c':'#207da4')}else roundRect(-13,-4,26,16,6,'#207da4');
  const armY=dance?-7+Math.sin(t*19)*7:surprise?-14:sad?8:-1;
  ctx.strokeStyle=skin;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(-12,-3);ctx.lineTo(-23,armY);ctx.moveTo(12,-3);ctx.lineTo(23,dance?-armY-6:armY);ctx.stroke();
  oval(-23,armY,4.5,5,skin);oval(23,dance?-armY-6:armY,4.5,5,skin);
- roundRect(-12,-12,24,16,4,'#fff0b4');
+ if(actor){ctx.strokeStyle=shirt;ctx.lineWidth=9;ctx.beginPath();ctx.moveTo(-12,-3);ctx.lineTo(-19,armY);ctx.moveTo(12,-3);ctx.lineTo(19,dance?-armY-6:armY);ctx.stroke();roundRect(-14,-13,28,20,5,shirt);roundRect(-8,-1,16,6,3,actor.difficulty==='easy'?'#2369b8':'#e83a40');ctx.strokeStyle='#fff0b4';ctx.lineWidth=1.6;ctx.beginPath();ctx.moveTo(-4,-10);ctx.lineTo(-5,-4);ctx.moveTo(4,-10);ctx.lineTo(5,-4);ctx.stroke()}else{roundRect(-12,-12,24,16,4,'#fff0b4');
  ctx.strokeStyle='#ead67c';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-3,-10);ctx.lineTo(-3,3);ctx.moveTo(3,-10);ctx.lineTo(3,3);ctx.stroke();
  roundRect(-18,-12,14,19,5,'#f5cd36');roundRect(4,-12,14,19,5,'#f5cd36');
  oval(-9,-10,5,5,'#ffdc59');oval(9,-10,5,5,'#ffdc59');
- oval(-12,3,3,3,'#eeb339');oval(12,3,3,3,'#eeb339');
+ oval(-12,3,3,3,'#eeb339');oval(12,3,3,3,'#eeb339');}
  // High bun, back hair, ears, and rounded face.
- oval(0,-42,15,12,'#d94559');oval(0,-44,14,10,hair);
+ if(!actor){oval(0,-42,15,12,'#d94559');oval(0,-44,14,10,hair);
  ctx.strokeStyle='#e75060';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(-7,-50);ctx.quadraticCurveTo(-10,-45,-7,-39);ctx.moveTo(6,-50);ctx.quadraticCurveTo(10,-44,7,-39);ctx.stroke();
- oval(0,-26,21,18,'#df4858');oval(-20,-20,5,7,skin);oval(20,-20,5,7,skin);
+ }if(actor){ctx.fillStyle=shirt;ctx.beginPath();ctx.moveTo(0,-53);ctx.bezierCurveTo(-18,-49,-30,-23,-25,-12);ctx.bezierCurveTo(-19,0,20,0,25,-12);ctx.bezierCurveTo(30,-23,18,-49,0,-53);ctx.fill();oval(0,-25,23,20,actor.difficulty==='easy'?'#174e93':'#b62d36')}oval(0,-26,21,18,actor?hair:'#df4858');oval(-20,-20,5,7,skin);oval(20,-20,5,7,skin);
  oval(-21,-20,2.4,4,'#f38c72');oval(21,-20,2.4,4,'#f38c72');
  roundRect(-19,-36,38,30,12,skin);
  oval(-14,-14,4,5,'#f7997f');oval(14,-14,4,5,'#f7997f');
  ctx.fillStyle=hair;ctx.beginPath();ctx.moveTo(-20,-24);ctx.bezierCurveTo(-22,-42,17,-48,21,-27);ctx.lineTo(17,-23);ctx.lineTo(14,-32);ctx.quadraticCurveTo(5,-29,2,-35);ctx.quadraticCurveTo(0,-40,-3,-32);ctx.quadraticCurveTo(-10,-28,-16,-31);ctx.lineTo(-18,-23);ctx.closePath();ctx.fill();
- oval(-10,-31,4.5,4,'#e74c5e');oval(10,-31,4.5,4,'#e74c5e');
+ if(!actor){oval(-10,-31,4.5,4,'#e74c5e');oval(10,-31,4.5,4,'#e74c5e')}
  ctx.strokeStyle=ink;ctx.lineWidth=1.7;
  if(grade==='Perfect'||sad){
   for(const x of [-8,8]){ctx.beginPath();if(sad){ctx.moveTo(x-4,-23);ctx.quadraticCurveTo(x,-18,x+4,-23)}else{ctx.arc(x,-20,4,Math.PI,Math.PI*2)}ctx.stroke()}
@@ -171,54 +173,56 @@ function drawCharacter(pos,height,now){
 }
 
 
-function showMenu(){document.body.classList.remove('playing');mode=null;cancel();flight=null;bot=null;reaction=null;stopSounds();button.disabled=true;$('#menu').hidden=false;$('#play').hidden=true;$('#reset').hidden=true;$('#solo').focus()}
+function showMenu(){document.body.classList.remove('playing');mode=null;cancel();flight=null;bots=[];reaction=null;stopSounds();button.disabled=true;$('#menu').hidden=false;$('#play').hidden=true;$('#reset').hidden=true;$('#solo').focus()}
 function startGame(choice){document.body.classList.add('playing');window.scrollTo(0,0);mode=choice;$('#menu').hidden=true;$('#play').hidden=false;$('#reset').hidden=false;reset();unlockAudio();$('#menuButton').blur()}
 $('#solo').addEventListener('click',()=>startGame('solo'));
 $('#multi').addEventListener('click',()=>{$('#difficulty').hidden=!$('#difficulty').hidden;$('#multi').setAttribute('aria-expanded',String(!$('#difficulty').hidden))});
-$('#easy').addEventListener('click',()=>startGame('easy'));$('#hard').addEventListener('click',()=>startGame('hard'));$('#menuButton').addEventListener('click',showMenu);
+$('#easy').addEventListener('click',()=>startGame('duo'));$('#hard').addEventListener('click',()=>startGame('trio'));$('#menuButton').addEventListener('click',showMenu);
 function checkRound(){
  if(completed||!mode)return;
- const cleared=pairs+(bot?bot.pairs:0)>=12,timed=bot&&performance.now()>=roundEnd;
+ const cleared=pairs+bots.reduce((sum,b)=>sum+b.pairs,0)>=12,timed=bots.length>0&&performance.now()>=roundEnd;
  if(!cleared&&!timed)return;
- completed=true;cancel();flight=null;if(bot)bot.flight=null;button.disabled=true;
- const title=bot?(pairs>bot.pairs?'คุณชนะ!':pairs<bot.pairs?'บอทชนะ!':'เสมอกัน!'):'เคลียร์สนามแล้ว!';
- $('#result').hidden=false;$('#result').textContent=title+(bot?' คุณ '+pairs+' คู่ / บอท '+bot.pairs+' คู่':' '+score+' คะแนน');say('กดเริ่มใหม่เพื่อเล่นอีกครั้ง หรือเลือกโหมดใหม่');hud();
+ completed=true;cancel();flight=null;for(const b of bots)b.flight=null;button.disabled=true;
+ const ranking=[{name:'คุณ',pairs},...bots.map(b=>({name:b.difficulty==='easy'?'Easy':'Hard',pairs:b.pairs}))].sort((a,b)=>b.pairs-a.pairs);
+ const winners=ranking.filter(p=>p.pairs===ranking[0].pairs).map(p=>p.name);
+ const title=!bots.length?'เคลียร์สนามแล้ว!':winners.length>1?'เสมอกัน: '+winners.join(' / '):winners[0]+'ชนะ!';
+ $('#result').hidden=false;$('#result').textContent=title+' · '+(bots.length?ranking.map(p=>p.name+' '+p.pairs+' คู่').join(' / '):score+' คะแนน');say('กดเริ่มใหม่เพื่อเล่นอีกครั้ง หรือเลือกโหมดใหม่');hud();
 }
-function botLand(pos){
+function botLand(bot,pos){
  bot.pos=pos;const i=tileAt(pos);if(bot.selected!==null&&tiles[bot.selected]===null)bot.selected=null;
- if(i<0||tiles[i]===null||i===bot.selected)return;
+ if(i<0||tiles[i]===null){botReact(bot,'Miss');return}if(i===bot.selected){botReact(bot,landingGrade(pos,center(i)),false);return}botReact(bot,landingGrade(pos,center(i)));
  if(bot.selected!==null&&tiles[bot.selected]===tiles[i]){
   tiles[bot.selected]=null;tiles[i]=null;bot.selected=null;bot.pairs++;bot.score+=100+(landingGrade(pos,center(i))==='Perfect'?25:0);burst(center(i));
-  if(selected!==null&&tiles[selected]===null){selected=null;say('บอทเก็บไทล์ที่เลือกไปแล้ว — เลือกชิ้นใหม่ได้เลย')}
+  clearSelections();
  }else bot.selected=i;
  hud();checkRound();
 }
-function updateBot(now){
- if(!mode||!bot||completed||document.hidden)return;checkRound();if(completed)return;
- if(bot.flight){const t=Math.min(1,(now-bot.flight.start)/620);if(t>=1){const to=bot.flight.to;bot.flight=null;botLand(to);bot.next=now+(mode==='easy'?1800:650)}return}
+function botReact(bot,grade,count=true){if(grade==='Miss')bot.combo=0;else if(count){bot.combo++;bot.bestCombo=Math.max(bot.bestCombo,bot.combo)}bot.reaction={grade,combo:bot.combo,start:performance.now(),duration:grade==='Perfect'?1400:grade==='Miss'?1200:1100};soundJudgment(grade,count?bot.combo:0)}
+function updateBot(bot,now){
+ if(!mode||completed||document.hidden)return;checkRound();if(completed)return;
+ if(bot.flight){const t=Math.min(1,(now-bot.flight.start)/620);if(t>=1){const to=bot.flight.to;bot.flight=null;botLand(bot,to);bot.next=now+(bot.difficulty==='easy'?1800:650)}return}
  if(now<bot.next)return;
  if(bot.selected!==null&&tiles[bot.selected]===null)bot.selected=null;
  let candidates=tiles.map((v,i)=>v!==null&&i!==bot.selected?i:-1).filter(i=>i>=0);
  const matches=bot.selected===null?[]:candidates.filter(i=>tiles[i]===tiles[bot.selected]);
- if(matches.length&&(mode==='hard'||Math.random()<.75))candidates=matches;
+ if(matches.length&&(bot.difficulty==='hard'||Math.random()<.75))candidates=matches;
  if(!candidates.length){bot.next=now+500;return}
  candidates.sort((a,b)=>Math.hypot(center(a).x-bot.pos.x,center(a).y-bot.pos.y)-Math.hypot(center(b).x-bot.pos.x,center(b).y-bot.pos.y));
- const target=candidates[mode==='easy'?Math.floor(Math.random()*candidates.length):0],c=center(target);
- const error=mode==='easy'?(Math.random()<.25?65:28):10,angle=Math.random()*Math.PI*2,offset=Math.random()*error;
+ const target=candidates[bot.difficulty==='easy'?Math.floor(Math.random()*candidates.length):0],c=center(target);
+ const error=bot.difficulty==='easy'?(Math.random()<.25?65:28):10,angle=Math.random()*Math.PI*2,offset=Math.random()*error;
  const to={x:Math.max(21,Math.min(479,c.x+Math.cos(angle)*offset)),y:Math.max(21,Math.min(479,c.y+Math.sin(angle)*offset))};
- bot.flight={from:{...bot.pos},to,start:now};
+ bot.reaction=null;bot.flight={from:{...bot.pos},to,start:now};
 }
-function drawBot(now){if(!bot)return;let pos=bot.pos,height=0;if(bot.flight){const t=Math.min(1,(now-bot.flight.start)/620);pos={x:bot.flight.from.x+(bot.flight.to.x-bot.flight.from.x)*t,y:bot.flight.from.y+(bot.flight.to.y-bot.flight.from.y)*t};height=Math.sin(t*Math.PI)*65}
- ctx.save();ctx.fillStyle='#061f3266';ctx.beginPath();ctx.ellipse(pos.x,pos.y+8,14,6,0,0,Math.PI*2);ctx.fill();ctx.translate(pos.x,pos.y-height-8);ctx.fillStyle=bot.color;ctx.strokeStyle='#123437';ctx.lineWidth=3;ctx.beginPath();ctx.arc(0,0,17,0,Math.PI*2);ctx.fill();ctx.stroke();ctx.fillStyle='#123437';for(const x of [-5,5]){ctx.beginPath();ctx.arc(x,-3,2,0,Math.PI*2);ctx.fill()}ctx.beginPath();ctx.arc(0,2,6,0,Math.PI);ctx.stroke();ctx.font='bold 12px Tahoma';ctx.fillStyle=bot.color;ctx.strokeStyle='#123437';ctx.lineWidth=4;ctx.strokeText(mode==='easy'?'EASY':'HARD',0,-30);ctx.fillText(mode==='easy'?'EASY':'HARD',0,-30);ctx.restore()}
+function drawBot(bot,now){let pos=bot.pos,height=0;if(bot.flight){const t=Math.min(1,(now-bot.flight.start)/620);pos={x:bot.flight.from.x+(bot.flight.to.x-bot.flight.from.x)*t,y:bot.flight.from.y+(bot.flight.to.y-bot.flight.from.y)*t};height=Math.sin(t*Math.PI)*65}drawCharacter(pos,height,now,bot);ctx.save();ctx.textAlign='center';ctx.font='bold 10px Tahoma';ctx.strokeStyle='#123437';ctx.lineWidth=3;ctx.fillStyle=bot.color;const label=bot.difficulty.toUpperCase();ctx.strokeText(label,pos.x,pos.y-height+27);ctx.fillText(label,pos.x,pos.y-height+27);ctx.restore()}
 function fitBoard(){const board=canvas.parentElement;const size=Math.max(0,Math.floor(Math.min(board.clientWidth,board.clientHeight)));canvas.style.width=size+'px';canvas.style.height=size+'px'}
 new ResizeObserver(fitBoard).observe(canvas.parentElement);
 $('#helpButton').addEventListener('click',()=>{cancel();$('#help').showModal()});$('#closeHelp').addEventListener('click',()=>$('#help').close());
 let last=performance.now();
-function frame(now){const dt=Math.min(3,(now-last)/16.67);last=now;updateBot(now);if(bot&&!completed)hud();ctx.clearRect(0,0,500,500);ctx.textAlign='center';ctx.textBaseline='middle';for(let i=0;i<25;i++){const c=center(i),k=tiles[i];roundRect(c.x-39,c.y-34,78,78,12,'#123436');roundRect(c.x-39,c.y-40,78,78,12,k===null?'#2d5352':kinds[k].color);if(bot&&i===bot.selected){ctx.strokeStyle=bot.color;ctx.lineWidth=4;ctx.strokeRect(c.x-35,c.y-36,70,70)}if(i===selected){ctx.strokeStyle='#eaff93';ctx.lineWidth=5;ctx.strokeRect(c.x-40,c.y-41,80,80)}if(k!==null){ctx.font='35px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(kinds[k].icon,c.x,c.y-1)}else if(i===12&&hops===0){ctx.font='10px Tahoma';ctx.fillStyle='#9ebbb0';ctx.fillText('START',c.x,c.y+20)}}
+function frame(now){const dt=Math.min(3,(now-last)/16.67);last=now;for(const b of bots)updateBot(b,now);if(bots.length&&!completed)hud();ctx.clearRect(0,0,500,500);ctx.textAlign='center';ctx.textBaseline='middle';for(let i=0;i<25;i++){const c=center(i),k=tiles[i];roundRect(c.x-39,c.y-34,78,78,12,'#123436');roundRect(c.x-39,c.y-40,78,78,12,k===null?'#2d5352':kinds[k].color);for(const b of bots)if(i===b.selected){const inset=b.difficulty==='easy'?35:30;ctx.strokeStyle=b.color;ctx.lineWidth=3;ctx.strokeRect(c.x-inset,c.y-inset-1,inset*2,inset*2)}if(i===selected){ctx.strokeStyle='#eaff93';ctx.lineWidth=5;ctx.strokeRect(c.x-40,c.y-41,80,80)}if(k!==null){ctx.font='35px "Apple Color Emoji","Segoe UI Emoji",sans-serif';ctx.fillText(kinds[k].icon,c.x,c.y-1)}else if(i===12&&hops===0){ctx.font='10px Tahoma';ctx.fillStyle='#9ebbb0';ctx.fillText('START',c.x,c.y+20)}}
 const p=power(now);$('#power').style.width=p*100+'%';$('.meter').setAttribute('aria-valuenow',Math.round(p*100));
 if(!flight&&!completed){const target=charging===null?aim:destination(p);ctx.save();ctx.setLineDash([5,7]);ctx.strokeStyle='#ecff96';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(player.x,player.y);ctx.lineTo(target.x,target.y);ctx.stroke();ctx.restore();ctx.strokeStyle=charging===null?'#ffffff88':'#eaff93';ctx.lineWidth=3;ctx.beginPath();ctx.arc(target.x,target.y,charging===null?12:17,0,Math.PI*2);ctx.stroke();if(charging!==null){ctx.fillStyle='#eaff93';ctx.font='bold 13px Tahoma';ctx.fillText(Math.round(p*100)+'%',player.x,player.y-44)}}
 let draw=player,height=0;if(flight){const t=Math.min(1,(now-flight.start)/flight.duration);draw={x:flight.from.x+(flight.to.x-flight.from.x)*t,y:flight.from.y+(flight.to.y-flight.from.y)*t};height=Math.sin(t*Math.PI)*65;if(t===1){const end=flight.to;flight=null;land(end);draw=player;height=0}}
-drawBot(now);drawCharacter(draw,height,now);
+for(const b of bots)drawBot(b,now);drawCharacter(draw,height,now);
 particles=particles.filter(a=>a.life>0);for(const a of particles){a.life-=.025*dt;a.x+=a.vx*dt;a.y+=a.vy*dt;a.vy+=.12*dt;ctx.globalAlpha=Math.max(0,a.life);ctx.fillStyle='#ecff96';ctx.fillRect(a.x,a.y,5,5)}ctx.globalAlpha=1;requestAnimationFrame(frame)}
 reset();showMenu();requestAnimationFrame(frame);
 </script></body></html>
